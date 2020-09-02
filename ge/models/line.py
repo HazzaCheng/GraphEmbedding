@@ -31,6 +31,7 @@ from ..utils import preprocess_nxgraph
 
 
 def line_loss(y_true, y_pred):
+    # KL 散度
     return -K.mean(K.log(K.sigmoid(y_true*y_pred)))
 
 
@@ -116,10 +117,12 @@ class LINE:
         node_degree = np.zeros(numNodes)  # out degree
         node2idx = self.node2idx
 
+        # 计算每个节点的出度，这里用的是 weight 加权
         for edge in self.graph.edges():
             node_degree[node2idx[edge[0]]
                         ] += self.graph[edge[0]][edge[1]].get('weight', 1.0)
 
+        # 计算每个节点被的采样概率并归一化，这里用的是每个节点的出度
         total_sum = sum([math.pow(node_degree[i], power)
                          for i in range(numNodes)])
         norm_prob = [float(math.pow(node_degree[j], power)) /
@@ -129,6 +132,7 @@ class LINE:
 
         # create sampling table for edge
         numEdges = self.graph.number_of_edges()
+        # 计算每个边被的采样概率并归一化，这里用的是每条边的 weight
         total_sum = sum([self.graph[edge[0]][edge[1]].get('weight', 1.0)
                          for edge in self.graph.edges()])
         norm_prob = [self.graph[edge[0]][edge[1]].get('weight', 1.0) *
@@ -145,7 +149,9 @@ class LINE:
         # positive or negative mod
         mod = 0
         mod_size = 1 + self.negative_ratio
+        # 每条边的出节点, 例如 a->b 中的 a
         h = []
+        # 每条边的入节点, 例如 a->b 中的 b
         t = []
         sign = 0
         count = 0
@@ -157,6 +163,7 @@ class LINE:
                 h = []
                 t = []
                 for i in range(start_index, end_index):
+                    # alias 采样
                     if random.random() >= self.edge_accept[shuffle_indices[i]]:
                         shuffle_indices[i] = self.edge_alias[shuffle_indices[i]]
                     cur_h = edges[shuffle_indices[i]][0]

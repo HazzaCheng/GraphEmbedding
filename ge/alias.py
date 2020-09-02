@@ -3,7 +3,7 @@ import numpy as np
 
 def create_alias_table(area_ratio):
     """
-
+    Alias 采样方法，https://blog.csdn.net/haolexiao/article/details/65157026
     :param area_ratio: sum(area_ratio)=1
     :return: accept,alias
     """
