@@ -46,6 +46,7 @@ class DeepWalk:
         kwargs["iter"] = iter
 
         print("Learning embedding vectors...")
+        # 直接调用了 gensim 里的 Word2Vec 去训练
         model = Word2Vec(**kwargs)
         print("Learning embedding vectors done!")
 

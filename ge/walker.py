@@ -32,6 +32,7 @@ class RandomWalker:
             cur = walk[-1]
             cur_nbrs = list(self.G.neighbors(cur))
             if len(cur_nbrs) > 0:
+                # 随机选择下一个节点
                 walk.append(random.choice(cur_nbrs))
             else:
                 break
