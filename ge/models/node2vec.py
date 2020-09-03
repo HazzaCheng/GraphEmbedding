@@ -34,6 +34,7 @@ class Node2Vec:
             graph, p=p, q=q, use_rejection_sampling=use_rejection_sampling)
 
         print("Preprocess transition probs...")
+        # 生成采样概率
         self.walker.preprocess_transition_probs()
 
         self.sentences = self.walker.simulate_walks(

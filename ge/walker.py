@@ -51,9 +51,11 @@ class RandomWalker:
             cur_nbrs = list(G.neighbors(cur))
             if len(cur_nbrs) > 0:
                 if len(walk) == 1:
+                    # 第一步，根据 node 去采样
                     walk.append(
                         cur_nbrs[alias_sample(alias_nodes[cur][0], alias_nodes[cur][1])])
                 else:
+                    # 根据 edge 去采样
                     prev = walk[-2]
                     edge = (prev, cur)
                     next_node = cur_nbrs[alias_sample(alias_edges[edge][0],
@@ -159,6 +161,7 @@ class RandomWalker:
         q = self.q
 
         unnormalized_probs = []
+        # 根据 p 和 q 值计算 v 的对下一个节点的转移概率
         for x in G.neighbors(v):
             weight = G[v][x].get('weight', 1.0)  # w_vx
             if x == t:  # d_tx == 0
@@ -180,6 +183,7 @@ class RandomWalker:
         G = self.G
         alias_nodes = {}
         for node in G.nodes():
+            # 对每个节点计算采样邻节点的概率
             unnormalized_probs = [G[node][nbr].get('weight', 1.0)
                                   for nbr in G.neighbors(node)]
             norm_const = sum(unnormalized_probs)
@@ -191,8 +195,10 @@ class RandomWalker:
             alias_edges = {}
 
             for edge in G.edges():
+                # 计算每条边的采样概率
                 alias_edges[edge] = self.get_alias_edge(edge[0], edge[1])
                 if not G.is_directed():
+                    # 针对有向图
                     alias_edges[(edge[1], edge[0])] = self.get_alias_edge(edge[1], edge[0])
                 self.alias_edges = alias_edges
 
