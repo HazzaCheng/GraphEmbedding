@@ -56,20 +56,25 @@ def create_model(node_size, hidden_size=[256, 128], l1=1e-5, l2=1e-4):
     A = Input(shape=(node_size,))
     L = Input(shape=(None,))
     fc = A
+    # encoder
     for i in range(len(hidden_size)):
         if i == len(hidden_size) - 1:
+            # 论文中的 Laplace Eigenmaps 层
             fc = Dense(hidden_size[i], activation='relu',
                        kernel_regularizer=l1_l2(l1, l2), name='1st')(fc)
         else:
             fc = Dense(hidden_size[i], activation='relu',
                        kernel_regularizer=l1_l2(l1, l2))(fc)
     Y = fc
+    # decoder
     for i in reversed(range(len(hidden_size) - 1)):
         fc = Dense(hidden_size[i], activation='relu',
                    kernel_regularizer=l1_l2(l1, l2))(fc)
-
+    # reconstruction
     A_ = Dense(node_size, 'relu', name='2nd')(fc)
+    # 得到 \hat{x}_i 和 y_i^{(K)}
     model = Model(inputs=[A, L], outputs=[A_, Y])
+    # 仅得到 y_i^{(K)}
     emb = Model(inputs=A, outputs=Y)
     return model, emb
 
@@ -87,7 +92,7 @@ class SDNE(object):
         self.beta = beta
         self.nu1 = nu1
         self.nu2 = nu2
-
+        # 构造邻接矩阵和拉普拉斯矩阵
         self.A, self.L = self._create_A_L(
             self.graph, self.node2idx)  # Adj Matrix,L Matrix
         self.reset_model()
@@ -98,6 +103,7 @@ class SDNE(object):
 
         self.model, self.emb_model = create_model(self.node_size, hidden_size=self.hidden_size, l1=self.nu1,
                                                   l2=self.nu2)
+        # first-order 和 second-order 损失
         self.model.compile(opt, [l_2nd(self.beta), l_1st(self.alpha)])
         self.get_embeddings()
 
@@ -166,9 +172,11 @@ class SDNE(object):
             A_col_index.append(node2idx[v2])
 
         A = sp.csr_matrix((A_data, (A_row_index, A_col_index)), shape=(node_size, node_size))
+        # 构造 adjacent 矩阵
         A_ = sp.csr_matrix((A_data + A_data, (A_row_index + A_col_index, A_col_index + A_row_index)),
                            shape=(node_size, node_size))
-
+        # 构造 degree 矩阵
         D = sp.diags(A_.sum(axis=1).flatten().tolist()[0])
+        # 构造 Laplace 矩阵
         L = D - A_
         return A, L
